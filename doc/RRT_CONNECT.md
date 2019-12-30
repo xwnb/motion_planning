@@ -1,20 +1,49 @@
 # 路径规划之 RRT_Connect (平衡双向快速扩展随机树)
 
-单颗RRT树每次搜索只从初始节点开始在状态空间中快速随机扩展节点，带有一定的盲目性。RRT_Connect算法是一种基于双向扩展平衡的连结型双树(Balanced Bidirectional RRT)：两颗RRTs分别基于$q_{init}$和$q_{goal}$扩展；贪心启发式的连接方法使每棵树扩展时一次移动更长的距离。[作者][1]原文中举例了平面地图以及6-DOF的机械臂来验证RRT_Connect.
+单颗RRT树每次搜索只从初始节点开始在状态空间中快速随机扩展节点，带有一定的盲目性。RRT_Connect算法是一种基于双向扩展平衡的连结型双树(Balanced Bidirectional RRT)：两颗RRTs分别基于$q_{init}$和$q_{goal}$扩展；贪心启发式的连接方法使每棵树扩展时一次移动更长的距离。[作者](https://ieeexplore.ieee.org/document/844730)原文中举例了平面地图以及6-DOF的机械臂来验证RRT_Connect.
 
 ![rrt_connect.gif](gif/rrt_connect.gif)
 
-[1]: https://ieeexplore.ieee.org/document/844730 
 
-
-## 构造树
+## 算法描述
 
 分别在起点$q_{init}$和终点$q_{goal}$构造两棵树$T_1$和$T_2$，扩展节点方式同RRT。首先$T_1$从$q_{init}$随机采样$q_{rand}$作为目标点扩展一个新节点$𝑞_{𝑛𝑒𝑤}$，以这个新节点$𝑞_{𝑛𝑒𝑤}$作为第二棵树$T_2$的目标点来扩展新节点$𝑞^′_{𝑛𝑒𝑤}$。如果$𝑞^′_{𝑛𝑒𝑤}$没有碰撞，继续以$𝑞_{𝑛𝑒𝑤}$作为目标点扩展$T_2$，直到扩展失败(遇到障碍，进行下一次循环扩展)或者$𝑞^′_{𝑛𝑒𝑤}=𝑞_{𝑛𝑒𝑤}$(两棵树相连，即connect，整个算法结束)。每次扩展需要考虑两棵树的平衡性，节点多少或总路径的长度。交换次序，选择较短的树进行扩展。
-首先，RRT_Connect算法以另一棵树的新节点作为目标点扩展，直到扩展失败。每次扩展更加贪婪，步长更长，使得树的生长更快；其次，两棵树不断朝向对方交替扩展，相比于随机扩展的方式具有一定的启发性质，特别当起始位姿和目标位姿处于约束区域时，两棵树可以通过朝向对方快速扩展而逃离各自的约束区域。算法伪码如下图所示 [Algorithms RRT_Connect](img/algorithm_rrt_connect.png)
+首先，RRT_Connect算法以另一棵树的新节点作为目标点扩展，直到扩展失败。每次扩展更加贪婪，步长更长，使得树的生长更快；其次，两棵树不断朝向对方交替扩展，相比于随机扩展的方式具有一定的启发性质，特别当起始位姿和目标位姿处于约束区域时，两棵树可以通过朝向对方快速扩展而逃离各自的约束区域。
+
+### 伪码
 
 ![Algorithms RRT_Connect](img/algorithm_rrt_connect.png)
 
-## 算法流程: Planning()
+## 算法实现
+
+### 数据结构
+
+```python
+class Node(object):
+    def __init__(self, pos=[0, 0]):
+        self.pos = pos
+        self.parent = None
+```
+
+### 接口
+
+``` python
+    '''
+    map_path: 地图图片路径
+    qstart: 起点坐标 [row, col]
+    qgoal: 目标点坐标 [row, col]
+    grid_size: 网格大小（用来碰撞检测）
+    step_size: 扩展步长
+    max_steps: 最大扩展节点数
+    goal_prob: 增加趋向目标点概率（贪婪）
+    '''
+
+    rrt_connect = RRT_CONNECT(map_path, qstart, qgoal, grid_size,
+                              step_size, max_steps, goal_prob)
+    
+```
+
+### Planning
 
 ``` python
     def Planning(self):
@@ -160,24 +189,7 @@
         return False
 ```
 
-RRT_Connect构造函数
 
-``` python
-    '''
-    map_path: 地图图片路径
-    qstart: 起点坐标 [row, col]
-    qgoal: 目标点坐标 [row, col]
-    grid_size: 网格大小（用来碰撞检测）
-    step_size: 扩展步长
-    max_steps: 最大扩展节点数
-    goal_prob: 增加趋向目标点概率（贪婪）
-    '''
-
-    rrt_connect = RRT_CONNECT(map_path, qstart, qgoal, grid_size,
-                              step_size, max_steps, goal_prob)
-    
-```
-
-参考文献：
-1. Kuffner J J , Lavalle S M . RRT-connect: An efficient approach to single-query path planning[C]// Proceedings 2000 ICRA. Millennium Conference. IEEE International Conference on Robotics and Automation. Symposia Proceedings (Cat. No.00CH37065). IEEE, 2002.  
+## 参考资料：
+[1]: Kuffner J J , Lavalle S M . RRT-connect: An efficient approach to single-query path planning[C]// Proceedings 2000 ICRA. Millennium Conference. IEEE International Conference on Robotics and Automation. Symposia Proceedings (Cat. No.00CH37065). IEEE, 2002.  
 

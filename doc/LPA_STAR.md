@@ -6,15 +6,11 @@ LPA\*是A\*的增量版本. 相比于A\*算法, 首次规划时, 两者过程类
 
 ## 算法描述
 
-### 节点状态
-
 局部连续（Locally Consistent）：$g(s)=rhs(s)$。当所有节点均为局部连续状态时，g(s)的值等于s到起始点的最短距离（注意，反向不成立）。这个概念很重要，当上述条件满足时，我们可以找到任意一点u到起始点的最短路径，假设当前位置为s,父辈节点s’(向着起始点前进的下一个节点)通过最小化(g(s’)+c(s,s’))来获得，不断重复直到到达sStart。然而，LPA*并不需要使所有节点均为局部连续状态，它通过启发式搜索将关注点放在搜索上，并且只更新那些与计算最短路径相关的节点的g值。
 
 局部过连续（Locally Overconsistent）：$g(s)>rhs(s)$。当优先队列U中取出的节点为局部过连续状态时，意味着g(s)可以通过父辈节点使自己到起点的路径更短，此时将设置g(s)=rhs(s)，节点状态变为局部连续状态。
 
 局部欠连续(Locally Underconsistent)：$g(s)<rhs(s)$。这种情况通常出现在父辈的某一节点突然变为障碍的情况下，造成父辈节点到起点的路径变大，从而需要修改g(s)的值，如果节点处于这种状态，则当它由优先队列中取出时，将其g值设置为无穷大，即将该节点状态变为局部过连续，而局部过连续的点将会被再次添加到优先队列中，这样就可以在它下次被取出时将其作为局部过连续状态处理，最终达到局部连续状态（如果这一节点与我们要搜索的最短路径相关的话）。
-
-### 变量定义
 
 LPA\*维持着每个节点的到起点的估计距离: [$g(s)$][1] 首次搜索时, $g(s)$的计算方式和A\*相同, 并将这个值带到下次搜索过程中. 
 ![algorithm_lpa_star_g][1]
@@ -31,46 +27,27 @@ A\*算法维护着OPEN和CLOSED列表来避免节点被重复搜索. LPA\*通过
 
 定义: $k(s1) \leq (s2)$ 为 $k1(s1) \leq k1(s2)$ 或者 $(k1(s1)=k1(s2) \text{ and }k2(s1) \leq k2(s2))$
 
-### 算法伪码
+### 伪码
+
 算法伪码如下图所示 [Algorithms LAP*][3]
 ![3]
-
 
 [1]: img/algorithm_lpa_star_g.png
 [2]: img/algorithm_lpa_star_rhs.png
 [3]: img/algorithm_lpa_star.png
 
+### 图解
 
+[第一次搜索][4]
+![4]
 
-### 数据结构：
+[第二次搜索][5]
+![5]
 
-```python
-class Node(object):
-    def __init__(self, pos):
-        self.pos = pos          # 当前节点的位置坐标
-        self.g = float('inf')   # 当前节点的g(s),g_score
-        self.h = float('inf')   # 当前节点的的h(s),h_score
-        self.rhs = float('inf') # rhs(s)
-        self.keys = [float('inf'), float('inf')]    # 优先队列keys(s)值
-        self.p = None           # 当前节点的父节点
-        self.is_obs = False     # 当前节点是否是障碍物
-```
+[4]: img/algorithm_lpa_star_first_search.png
+[5]: img/algorithm_lpa_star_secord_search.png
 
-## 算法流程:
-
-``` python
-    '''
-    map_path:   地图图片路径
-    qstart:     起点坐标 [row, col]
-    qgoal:      目标点坐标 [row, col]
-    grid_size:  网格大小（用来碰撞检测）
-    '''
-
-    lpa_star = LPA_STAR(map_path, qstart, qgoal, grid_size)
-    
-```
-
-### 步骤
+## 流程
 
 + 初始化`LPA_STAR.__init__`: 初始化地图，对地图图片二值化处理，网格节点划分，若网格内包含障碍物，则该网格节点标记为障碍物:  `Node.is_obs = True`
   
@@ -96,21 +73,37 @@ class Node(object):
 
 + 将目标节点$s_{goal}$的后置链表反转即可得到$s_{start}$到$s_{goal}$的路径
 
-### 图解
+## 实现
 
-[第一次搜索][4]
-![4]
+### 数据结构
 
-[第二次搜索][5]
-![5]
+```python
+class Node(object):
+    def __init__(self, pos):
+        self.pos = pos          # 当前节点的位置坐标
+        self.g = float('inf')   # 当前节点的g(s),g_score
+        self.h = float('inf')   # 当前节点的的h(s),h_score
+        self.rhs = float('inf') # rhs(s)
+        self.keys = [float('inf'), float('inf')]    # 优先队列keys(s)值
+        self.p = None           # 当前节点的父节点
+        self.is_obs = False     # 当前节点是否是障碍物
+```
 
+### 接口
 
-[4]: img/algorithm_lpa_star_first_search.png
+``` python
+    '''
+    map_path:   地图图片路径
+    qstart:     起点坐标 [row, col]
+    qgoal:      目标点坐标 [row, col]
+    grid_size:  网格大小（用来碰撞检测）
+    '''
 
-[5]: img/algorithm_lpa_star_second_search.png
+    lpa_star = LPA_STAR(map_path, qstart, qgoal, grid_size)
+    
+```
 
-
-### 主要代码
+### Planning
 
 ```python
 

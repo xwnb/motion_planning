@@ -38,35 +38,8 @@ A*算法扩展路径时，在主循环的每次迭代中，基于路当前节点
 + 对角距离:
   > $d_{diagonal}=(|p1.x-p2.x|+|p1.y-p2.y|)+\sqrt{2}-2\times min(|p1.x-p2.x|,|p1.y-p2.y|)$
 
-节点的数据结构：
 
-```python
-class Node(object):
-    def __init__(self, pos):
-        self.pos = pos          # 当前节点的位置坐标
-        self.g = float('inf')   # 当前节点的g(n),g_score
-        self.h = float('inf')   # 当前节点的的h(n),h_score
-        self.f = float('inf')   # 当前节点的的f(n), f_score
-        self.p = None           # 当前节点的父节点
-        self.is_obs = False     # 当前节点是否是障碍物
-```
-
-## 算法流程:
-
-``` python
-    '''
-    map_path:   地图图片路径
-    qstart:     起点坐标 [row, col]
-    qgoal:      目标点坐标 [row, col]
-    grid_size:  网格大小（用来碰撞检测）
-    max_steps:  最大扩展节点数
-    '''
-
-    a_star = A_STAR(map_path, qstart, qgoal, grid_size, max_steps)
-    
-```
-
-### 步骤
+## 流程
 
 + 初始化`A_STAR.__init__`: 初始化地图，对地图图片二值化处理，网格节点划分，若网格内包含障碍物，则该网格节点标记为障碍物:  `Node.is_obs = True`
   
@@ -99,7 +72,38 @@ class Node(object):
             + 更新该该`neighbor`节点的父节点为当前节点`best_node`.
               
 
-### 主要代码
+
+## 实现
+
+### 数据结构
+
+```python
+class Node(object):
+    def __init__(self, pos):
+        self.pos = pos          # 当前节点的位置坐标
+        self.g = float('inf')   # 当前节点的g(n),g_score
+        self.h = float('inf')   # 当前节点的的h(n),h_score
+        self.f = float('inf')   # 当前节点的的f(n), f_score
+        self.p = None           # 当前节点的父节点
+        self.is_obs = False     # 当前节点是否是障碍物
+```
+
+### 接口
+
+``` python
+    '''
+    map_path:   地图图片路径
+    qstart:     起点坐标 [row, col]
+    qgoal:      目标点坐标 [row, col]
+    grid_size:  网格大小（用来碰撞检测）
+    max_steps:  最大扩展节点数
+    '''
+
+    a_star = A_STAR(map_path, qstart, qgoal, grid_size, max_steps)
+    
+```
+
+### Planning
 
 ```python
     def Planning(self):
